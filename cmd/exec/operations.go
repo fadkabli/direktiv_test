@@ -584,3 +584,144 @@ func pingNamespace() error {
 
 	return nil
 }
+
+func executeDeleteEventFilter() error {
+	var err error
+
+	if EventFilter == "" {
+		err = fmt.Errorf("filtername was not set")
+	}
+
+	url := fmt.Sprintf("%s/broadcast/%s", urlPrefix, EventFilter)
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		url,
+		nil,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	addAuthHeaders(req)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusBadRequest {
+		err = fmt.Errorf("filter: " + EventFilter + " not existing")
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to delete filter:" + EventFilter + " (rejected by server)")
+		return err
+	}
+
+	return err
+}
+
+func executeCreateEventFilter(update bool) error {
+
+	var url string
+	// Read input data from flag file
+	inputData, err := safeLoadFile(localAbsPath)
+	if err != nil {
+		log.Fatalf("Failed to load input file: %v", err)
+	}
+
+	// If inputData is empty attempt to read from stdin
+	if inputData.Len() == 0 {
+		inputData, err = safeLoadStdIn()
+		if err != nil {
+			log.Fatalf("Failed to load stdin: %v", err)
+		}
+	}
+
+	if update {
+		url = fmt.Sprintf("%s/eventfilter/update/%s", urlPrefix, EventFilter)
+	} else {
+		url = fmt.Sprintf("%s/eventfilter/%s", urlPrefix, EventFilter)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPut,
+		url,
+		inputData,
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", inputType)
+	addAuthHeaders(req)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusInternalServerError {
+		err = fmt.Errorf("script does not compile")
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to create filter: " + EventFilter + " (rejected by server)")
+		return err
+	}
+
+	return err
+}
+
+func executeEventFilter(update bool) error {
+
+	var url string
+	// Read input data from flag file
+	inputData, err := safeLoadFile(localAbsPath)
+	if err != nil {
+		log.Fatalf("Failed to load input file: %v", err)
+	}
+
+	// If inputData is empty attempt to read from stdin
+	if inputData.Len() == 0 {
+		inputData, err = safeLoadStdIn()
+		if err != nil {
+			log.Fatalf("Failed to load stdin: %v", err)
+		}
+	}
+
+	url = fmt.Sprintf("%s/broadcast/%s", urlPrefix, EventFilter)
+
+	req, err := http.NewRequest(
+		http.MethodPut,
+		url,
+		inputData,
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", inputType)
+	addAuthHeaders(req)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		err = fmt.Errorf("eventfilter: " + EventFilter + " not found")
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to apply filter: " + EventFilter + " (rejected by server)")
+		return err
+	}
+
+	return err
+}

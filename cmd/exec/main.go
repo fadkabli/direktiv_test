@@ -27,6 +27,7 @@ var (
 	Type           string
 	Id             string
 	Specversion    string
+	EventFilter    string
 
 	maxSize int64 = 1073741824
 )
@@ -49,6 +50,7 @@ func main() {
 	rootCmd.AddCommand(pushCmd)
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(eventCmd)
+	rootCmd.AddCommand(eventfilterCmd)
 
 	rootCmd.PersistentFlags().StringP("profile", "P", "", "Select the named profile from the loaded multi-profile configuration file.")
 	rootCmd.PersistentFlags().StringP("directory", "C", "", "Change to this directory before evaluating any paths or searching for a configuration file.")
@@ -69,6 +71,7 @@ func main() {
 	eventCmd.PersistentFlags().StringVar(&Type, "type", "", "Type of event")
 	eventCmd.PersistentFlags().StringVar(&Id, "id", "", "Event id ")
 	eventCmd.PersistentFlags().StringVar(&Specversion, "specversion", "", "The version of the CloudEvents specification which the event uses")
+	eventCmd.PersistentFlags().StringVar(&EventFilter, "filter", "", "eventfilter which should apllied on given event")
 
 	err := viper.BindPFlags(rootCmd.PersistentFlags())
 	if err != nil {
@@ -629,6 +632,56 @@ EXAMPLE: direktiv-sync event greeting.yaml
 				log.Fatalf("Failed to set remote variable file: %v\n", err)
 			}
 		}
+
+		urlExecuteEvent := fmt.Sprintf("%s/broadcast", urlPrefix)
+		event, err := executeEvent(urlExecuteEvent)
+		if err != nil {
+			log.Fatalf("failed to trigger event: %s %v\n", event, err)
+		}
+
+		cmd.PrintErrln("successfully triggered event: " + event)
+
+	},
+}
+
+var eventfilterCmd = &cobra.Command{
+	Use:   "eventfilter operation EVENTFILTER_PATH",
+	Short: "Remotely manage direktiv eventfilter",
+	Long: `Remotely manage direktiv eventfilters. This process can deleten, create and update eventfilter.
+
+EXAMPLE: direktiv-sync event create -s script.txt -f filtername
+	     direktiv-sync event delete filternanme
+		 direktiv-sync event update -s script.txt -f filtername
+`,
+	Args: cobra.ExactArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		cmdPrepareEvent(args[0])
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		localVars, err := getLocalWorkflowVariables(localAbsPath)
+		if err != nil {
+			log.Fatalf("failed to get local variable files: %v\n", err)
+		}
+		if len(localVars) > 0 {
+			cmd.PrintErrf("found %v local variables to push to remote\n", len(localVars))
+		}
+
+		// Set Remote Vars
+		for _, v := range localVars {
+			varName := filepath.ToSlash(strings.TrimPrefix(v, localAbsPath+"."))
+			cmd.PrintErrf("updating remote workflow variable: '%s'\n", varName)
+			err = setRemoteWorkflowVariable(urlWorkflow, varName, v)
+			if err != nil {
+				log.Fatalf("Failed to set remote variable file: %v\n", err)
+			}
+		}
+
+		//if delete
+
+		//if create
+
+		//if update
 
 		urlExecuteEvent := fmt.Sprintf("%s/broadcast", urlPrefix)
 		event, err := executeEvent(urlExecuteEvent)
