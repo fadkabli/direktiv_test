@@ -735,6 +735,13 @@ func (iq *InstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ins
 			return nil, err
 		}
 	}
+	if query := iq.withAnnotations; query != nil {
+		if err := iq.loadAnnotations(ctx, query, nodes,
+			func(n *Instance) { n.Edges.Annotations = []*Annotation{} },
+			func(n *Instance, e *Annotation) { n.Edges.Annotations = append(n.Edges.Annotations, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -972,6 +979,37 @@ func (iq *InstanceQuery) loadEventlisteners(ctx context.Context, query *EventsQu
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "instance_eventlisteners" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *InstanceQuery) loadAnnotations(ctx context.Context, query *AnnotationQuery, nodes []*Instance, init func(*Instance), assign func(*Instance, *Annotation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Instance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Annotation(func(s *sql.Selector) {
+		s.Where(sql.InValues(instance.AnnotationsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.instance_annotations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "instance_annotations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "instance_annotations" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -1464,11 +1464,13 @@ var file_pkg_flow_grpc_instances_proto_goTypes = []interface{}{
 	(*CancelInstanceRequest)(nil),    // 13: direktiv_flow.CancelInstanceRequest
 	(*StartWorkflowRequest)(nil),     // 14: direktiv_flow.StartWorkflowRequest
 	(*StartWorkflowResponse)(nil),    // 15: direktiv_flow.StartWorkflowResponse
-	(*RunWorkflowRequest)(nil),       // 16: direktiv_flow.RunWorkflowRequest
-	(*RunWorkflowResponse)(nil),      // 17: direktiv_flow.RunWorkflowResponse
-	(*timestamppb.Timestamp)(nil),    // 18: google.protobuf.Timestamp
-	(*PageInfo)(nil),                 // 19: direktiv_flow.PageInfo
-	(*Pagination)(nil),               // 20: direktiv_flow.Pagination
+	(*ReleaseInstanceRequest)(nil),   // 16: direktiv_flow.ReleaseInstanceRequest
+	(*ReleaseInstanceResponse)(nil),  // 17: direktiv_flow.ReleaseInstanceResponse
+	(*RunWorkflowRequest)(nil),       // 18: direktiv_flow.RunWorkflowRequest
+	(*RunWorkflowResponse)(nil),      // 19: direktiv_flow.RunWorkflowResponse
+	(*timestamppb.Timestamp)(nil),    // 20: google.protobuf.Timestamp
+	(*PageInfo)(nil),                 // 21: direktiv_flow.PageInfo
+	(*Pagination)(nil),               // 22: direktiv_flow.Pagination
 }
 var file_pkg_flow_grpc_instances_proto_depIdxs = []int32{
 	20, // 0: direktiv_flow.Instance.created_at:type_name -> google.protobuf.Timestamp

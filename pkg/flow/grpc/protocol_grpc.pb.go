@@ -136,7 +136,7 @@ type FlowClient interface {
 	NamespaceAnnotationsStream(ctx context.Context, in *NamespaceAnnotationsRequest, opts ...grpc.CallOption) (Flow_NamespaceAnnotationsStreamClient, error)
 	SetNamespaceAnnotation(ctx context.Context, in *SetNamespaceAnnotationRequest, opts ...grpc.CallOption) (*SetNamespaceAnnotationResponse, error)
 	SetNamespaceAnnotationParcels(ctx context.Context, opts ...grpc.CallOption) (Flow_SetNamespaceAnnotationParcelsClient, error)
-	DeleteNamespaceAnnotation(ctx context.Context, in *DeleteNamespaceAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteNamespaceAnnotation(ctx context.Context, in *DeleteNamespaceAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RenameNamespaceAnnotation(ctx context.Context, in *RenameNamespaceAnnotationRequest, opts ...grpc.CallOption) (*RenameNamespaceAnnotationResponse, error)
 	WorkflowAnnotation(ctx context.Context, in *WorkflowAnnotationRequest, opts ...grpc.CallOption) (*WorkflowAnnotationResponse, error)
 	WorkflowAnnotationParcels(ctx context.Context, in *WorkflowAnnotationRequest, opts ...grpc.CallOption) (Flow_WorkflowAnnotationParcelsClient, error)
@@ -144,7 +144,7 @@ type FlowClient interface {
 	WorkflowAnnotationsStream(ctx context.Context, in *WorkflowAnnotationsRequest, opts ...grpc.CallOption) (Flow_WorkflowAnnotationsStreamClient, error)
 	SetWorkflowAnnotation(ctx context.Context, in *SetWorkflowAnnotationRequest, opts ...grpc.CallOption) (*SetWorkflowAnnotationResponse, error)
 	SetWorkflowAnnotationParcels(ctx context.Context, opts ...grpc.CallOption) (Flow_SetWorkflowAnnotationParcelsClient, error)
-	DeleteWorkflowAnnotation(ctx context.Context, in *DeleteWorkflowAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteWorkflowAnnotation(ctx context.Context, in *DeleteWorkflowAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RenameWorkflowAnnotation(ctx context.Context, in *RenameWorkflowAnnotationRequest, opts ...grpc.CallOption) (*RenameWorkflowAnnotationResponse, error)
 	InstanceAnnotation(ctx context.Context, in *InstanceAnnotationRequest, opts ...grpc.CallOption) (*InstanceAnnotationResponse, error)
 	InstanceAnnotationParcels(ctx context.Context, in *InstanceAnnotationRequest, opts ...grpc.CallOption) (Flow_InstanceAnnotationParcelsClient, error)
@@ -152,7 +152,7 @@ type FlowClient interface {
 	InstanceAnnotationsStream(ctx context.Context, in *InstanceAnnotationsRequest, opts ...grpc.CallOption) (Flow_InstanceAnnotationsStreamClient, error)
 	SetInstanceAnnotation(ctx context.Context, in *SetInstanceAnnotationRequest, opts ...grpc.CallOption) (*SetInstanceAnnotationResponse, error)
 	SetInstanceAnnotationParcels(ctx context.Context, opts ...grpc.CallOption) (Flow_SetInstanceAnnotationParcelsClient, error)
-	DeleteInstanceAnnotation(ctx context.Context, in *DeleteInstanceAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteInstanceAnnotation(ctx context.Context, in *DeleteInstanceAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RenameInstanceAnnotation(ctx context.Context, in *RenameInstanceAnnotationRequest, opts ...grpc.CallOption) (*RenameInstanceAnnotationResponse, error)
 	ReleaseInstance(ctx context.Context, in *ReleaseInstanceRequest, opts ...grpc.CallOption) (*ReleaseInstanceResponse, error)
 	NodeAnnotation(ctx context.Context, in *NodeAnnotationRequest, opts ...grpc.CallOption) (*NodeAnnotationResponse, error)
@@ -161,7 +161,7 @@ type FlowClient interface {
 	NodeAnnotationsStream(ctx context.Context, in *NodeAnnotationsRequest, opts ...grpc.CallOption) (Flow_NodeAnnotationsStreamClient, error)
 	SetNodeAnnotation(ctx context.Context, in *SetNodeAnnotationRequest, opts ...grpc.CallOption) (*SetNodeAnnotationResponse, error)
 	SetNodeAnnotationParcels(ctx context.Context, opts ...grpc.CallOption) (Flow_SetNodeAnnotationParcelsClient, error)
-	DeleteNodeAnnotation(ctx context.Context, in *DeleteNodeAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteNodeAnnotation(ctx context.Context, in *DeleteNodeAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RenameNodeAnnotation(ctx context.Context, in *RenameNodeAnnotationRequest, opts ...grpc.CallOption) (*RenameNodeAnnotationResponse, error)
 	CreateNamespaceMirror(ctx context.Context, in *CreateNamespaceMirrorRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
 	CreateDirectoryMirror(ctx context.Context, in *CreateDirectoryMirrorRequest, opts ...grpc.CallOption) (*CreateDirectoryResponse, error)
@@ -1823,8 +1823,8 @@ func (x *flowSetNamespaceAnnotationParcelsClient) CloseAndRecv() (*SetNamespaceA
 	return m, nil
 }
 
-func (c *flowClient) DeleteNamespaceAnnotation(ctx context.Context, in *DeleteNamespaceAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *flowClient) DeleteNamespaceAnnotation(ctx context.Context, in *DeleteNamespaceAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/direktiv_flow.Flow/DeleteNamespaceAnnotation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1966,8 +1966,8 @@ func (x *flowSetWorkflowAnnotationParcelsClient) CloseAndRecv() (*SetWorkflowAnn
 	return m, nil
 }
 
-func (c *flowClient) DeleteWorkflowAnnotation(ctx context.Context, in *DeleteWorkflowAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *flowClient) DeleteWorkflowAnnotation(ctx context.Context, in *DeleteWorkflowAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/direktiv_flow.Flow/DeleteWorkflowAnnotation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2109,8 +2109,8 @@ func (x *flowSetInstanceAnnotationParcelsClient) CloseAndRecv() (*SetInstanceAnn
 	return m, nil
 }
 
-func (c *flowClient) DeleteInstanceAnnotation(ctx context.Context, in *DeleteInstanceAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *flowClient) DeleteInstanceAnnotation(ctx context.Context, in *DeleteInstanceAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/direktiv_flow.Flow/DeleteInstanceAnnotation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2261,8 +2261,8 @@ func (x *flowSetNodeAnnotationParcelsClient) CloseAndRecv() (*SetNodeAnnotationR
 	return m, nil
 }
 
-func (c *flowClient) DeleteNodeAnnotation(ctx context.Context, in *DeleteNodeAnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *flowClient) DeleteNodeAnnotation(ctx context.Context, in *DeleteNodeAnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/direktiv_flow.Flow/DeleteNodeAnnotation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2550,7 +2550,7 @@ type FlowServer interface {
 	NamespaceAnnotationsStream(*NamespaceAnnotationsRequest, Flow_NamespaceAnnotationsStreamServer) error
 	SetNamespaceAnnotation(context.Context, *SetNamespaceAnnotationRequest) (*SetNamespaceAnnotationResponse, error)
 	SetNamespaceAnnotationParcels(Flow_SetNamespaceAnnotationParcelsServer) error
-	DeleteNamespaceAnnotation(context.Context, *DeleteNamespaceAnnotationRequest) (*empty.Empty, error)
+	DeleteNamespaceAnnotation(context.Context, *DeleteNamespaceAnnotationRequest) (*emptypb.Empty, error)
 	RenameNamespaceAnnotation(context.Context, *RenameNamespaceAnnotationRequest) (*RenameNamespaceAnnotationResponse, error)
 	WorkflowAnnotation(context.Context, *WorkflowAnnotationRequest) (*WorkflowAnnotationResponse, error)
 	WorkflowAnnotationParcels(*WorkflowAnnotationRequest, Flow_WorkflowAnnotationParcelsServer) error
@@ -2558,7 +2558,7 @@ type FlowServer interface {
 	WorkflowAnnotationsStream(*WorkflowAnnotationsRequest, Flow_WorkflowAnnotationsStreamServer) error
 	SetWorkflowAnnotation(context.Context, *SetWorkflowAnnotationRequest) (*SetWorkflowAnnotationResponse, error)
 	SetWorkflowAnnotationParcels(Flow_SetWorkflowAnnotationParcelsServer) error
-	DeleteWorkflowAnnotation(context.Context, *DeleteWorkflowAnnotationRequest) (*empty.Empty, error)
+	DeleteWorkflowAnnotation(context.Context, *DeleteWorkflowAnnotationRequest) (*emptypb.Empty, error)
 	RenameWorkflowAnnotation(context.Context, *RenameWorkflowAnnotationRequest) (*RenameWorkflowAnnotationResponse, error)
 	InstanceAnnotation(context.Context, *InstanceAnnotationRequest) (*InstanceAnnotationResponse, error)
 	InstanceAnnotationParcels(*InstanceAnnotationRequest, Flow_InstanceAnnotationParcelsServer) error
@@ -2566,7 +2566,7 @@ type FlowServer interface {
 	InstanceAnnotationsStream(*InstanceAnnotationsRequest, Flow_InstanceAnnotationsStreamServer) error
 	SetInstanceAnnotation(context.Context, *SetInstanceAnnotationRequest) (*SetInstanceAnnotationResponse, error)
 	SetInstanceAnnotationParcels(Flow_SetInstanceAnnotationParcelsServer) error
-	DeleteInstanceAnnotation(context.Context, *DeleteInstanceAnnotationRequest) (*empty.Empty, error)
+	DeleteInstanceAnnotation(context.Context, *DeleteInstanceAnnotationRequest) (*emptypb.Empty, error)
 	RenameInstanceAnnotation(context.Context, *RenameInstanceAnnotationRequest) (*RenameInstanceAnnotationResponse, error)
 	ReleaseInstance(context.Context, *ReleaseInstanceRequest) (*ReleaseInstanceResponse, error)
 	NodeAnnotation(context.Context, *NodeAnnotationRequest) (*NodeAnnotationResponse, error)
@@ -2575,7 +2575,7 @@ type FlowServer interface {
 	NodeAnnotationsStream(*NodeAnnotationsRequest, Flow_NodeAnnotationsStreamServer) error
 	SetNodeAnnotation(context.Context, *SetNodeAnnotationRequest) (*SetNodeAnnotationResponse, error)
 	SetNodeAnnotationParcels(Flow_SetNodeAnnotationParcelsServer) error
-	DeleteNodeAnnotation(context.Context, *DeleteNodeAnnotationRequest) (*empty.Empty, error)
+	DeleteNodeAnnotation(context.Context, *DeleteNodeAnnotationRequest) (*emptypb.Empty, error)
 	RenameNodeAnnotation(context.Context, *RenameNodeAnnotationRequest) (*RenameNodeAnnotationResponse, error)
 	CreateNamespaceMirror(context.Context, *CreateNamespaceMirrorRequest) (*CreateNamespaceResponse, error)
 	CreateDirectoryMirror(context.Context, *CreateDirectoryMirrorRequest) (*CreateDirectoryResponse, error)
@@ -2917,7 +2917,7 @@ func (UnimplementedFlowServer) SetNamespaceAnnotation(context.Context, *SetNames
 func (UnimplementedFlowServer) SetNamespaceAnnotationParcels(Flow_SetNamespaceAnnotationParcelsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetNamespaceAnnotationParcels not implemented")
 }
-func (UnimplementedFlowServer) DeleteNamespaceAnnotation(context.Context, *DeleteNamespaceAnnotationRequest) (*empty.Empty, error) {
+func (UnimplementedFlowServer) DeleteNamespaceAnnotation(context.Context, *DeleteNamespaceAnnotationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNamespaceAnnotation not implemented")
 }
 func (UnimplementedFlowServer) RenameNamespaceAnnotation(context.Context, *RenameNamespaceAnnotationRequest) (*RenameNamespaceAnnotationResponse, error) {
@@ -2941,7 +2941,7 @@ func (UnimplementedFlowServer) SetWorkflowAnnotation(context.Context, *SetWorkfl
 func (UnimplementedFlowServer) SetWorkflowAnnotationParcels(Flow_SetWorkflowAnnotationParcelsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetWorkflowAnnotationParcels not implemented")
 }
-func (UnimplementedFlowServer) DeleteWorkflowAnnotation(context.Context, *DeleteWorkflowAnnotationRequest) (*empty.Empty, error) {
+func (UnimplementedFlowServer) DeleteWorkflowAnnotation(context.Context, *DeleteWorkflowAnnotationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteWorkflowAnnotation not implemented")
 }
 func (UnimplementedFlowServer) RenameWorkflowAnnotation(context.Context, *RenameWorkflowAnnotationRequest) (*RenameWorkflowAnnotationResponse, error) {
@@ -2965,7 +2965,7 @@ func (UnimplementedFlowServer) SetInstanceAnnotation(context.Context, *SetInstan
 func (UnimplementedFlowServer) SetInstanceAnnotationParcels(Flow_SetInstanceAnnotationParcelsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetInstanceAnnotationParcels not implemented")
 }
-func (UnimplementedFlowServer) DeleteInstanceAnnotation(context.Context, *DeleteInstanceAnnotationRequest) (*empty.Empty, error) {
+func (UnimplementedFlowServer) DeleteInstanceAnnotation(context.Context, *DeleteInstanceAnnotationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteInstanceAnnotation not implemented")
 }
 func (UnimplementedFlowServer) RenameInstanceAnnotation(context.Context, *RenameInstanceAnnotationRequest) (*RenameInstanceAnnotationResponse, error) {
@@ -2992,7 +2992,7 @@ func (UnimplementedFlowServer) SetNodeAnnotation(context.Context, *SetNodeAnnota
 func (UnimplementedFlowServer) SetNodeAnnotationParcels(Flow_SetNodeAnnotationParcelsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetNodeAnnotationParcels not implemented")
 }
-func (UnimplementedFlowServer) DeleteNodeAnnotation(context.Context, *DeleteNodeAnnotationRequest) (*empty.Empty, error) {
+func (UnimplementedFlowServer) DeleteNodeAnnotation(context.Context, *DeleteNodeAnnotationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNodeAnnotation not implemented")
 }
 func (UnimplementedFlowServer) RenameNodeAnnotation(context.Context, *RenameNodeAnnotationRequest) (*RenameNodeAnnotationResponse, error) {

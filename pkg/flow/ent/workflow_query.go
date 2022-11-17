@@ -29,22 +29,23 @@ import (
 // WorkflowQuery is the builder for querying Workflow entities.
 type WorkflowQuery struct {
 	config
-	limit         *int
-	offset        *int
-	unique        *bool
-	order         []OrderFunc
-	fields        []string
-	predicates    []predicate.Workflow
-	withInode     *InodeQuery
-	withNamespace *NamespaceQuery
-	withRevisions *RevisionQuery
-	withRefs      *RefQuery
-	withInstances *InstanceQuery
-	withRoutes    *RouteQuery
-	withLogs      *LogMsgQuery
-	withVars      *VarRefQuery
-	withWfevents  *EventsQuery
-	withFKs       bool
+	limit           *int
+	offset          *int
+	unique          *bool
+	order           []OrderFunc
+	fields          []string
+	predicates      []predicate.Workflow
+	withInode       *InodeQuery
+	withNamespace   *NamespaceQuery
+	withRevisions   *RevisionQuery
+	withRefs        *RefQuery
+	withInstances   *InstanceQuery
+	withRoutes      *RouteQuery
+	withLogs        *LogMsgQuery
+	withVars        *VarRefQuery
+	withWfevents    *EventsQuery
+	withAnnotations *AnnotationQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -781,6 +782,13 @@ func (wq *WorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wor
 			return nil, err
 		}
 	}
+	if query := wq.withAnnotations; query != nil {
+		if err := wq.loadAnnotations(ctx, query, nodes,
+			func(n *Workflow) { n.Edges.Annotations = []*Annotation{} },
+			func(n *Workflow, e *Annotation) { n.Edges.Annotations = append(n.Edges.Annotations, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -1054,6 +1062,37 @@ func (wq *WorkflowQuery) loadWfevents(ctx context.Context, query *EventsQuery, n
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "workflow_wfevents" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (wq *WorkflowQuery) loadAnnotations(ctx context.Context, query *AnnotationQuery, nodes []*Workflow, init func(*Workflow), assign func(*Workflow, *Annotation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Workflow)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Annotation(func(s *sql.Selector) {
+		s.Where(sql.InValues(workflow.AnnotationsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.workflow_annotations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "workflow_annotations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "workflow_annotations" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

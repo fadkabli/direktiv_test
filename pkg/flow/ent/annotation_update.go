@@ -279,53 +279,25 @@ func (au *AnnotationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := au.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldName,
-		})
+		_spec.SetField(annotation.FieldName, field.TypeString, value)
 	}
 	if value, ok := au.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: annotation.FieldUpdatedAt,
-		})
+		_spec.SetField(annotation.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := au.mutation.Size(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: annotation.FieldSize,
-		})
+		_spec.SetField(annotation.FieldSize, field.TypeInt, value)
 	}
 	if value, ok := au.mutation.AddedSize(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: annotation.FieldSize,
-		})
+		_spec.AddField(annotation.FieldSize, field.TypeInt, value)
 	}
 	if value, ok := au.mutation.Hash(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldHash,
-		})
+		_spec.SetField(annotation.FieldHash, field.TypeString, value)
 	}
 	if value, ok := au.mutation.Data(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBytes,
-			Value:  value,
-			Column: annotation.FieldData,
-		})
+		_spec.SetField(annotation.FieldData, field.TypeBytes, value)
 	}
 	if value, ok := au.mutation.MimeType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldMimeType,
-		})
+		_spec.SetField(annotation.FieldMimeType, field.TypeString, value)
 	}
 	if au.mutation.NamespaceCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -762,53 +734,25 @@ func (auo *AnnotationUpdateOne) sqlSave(ctx context.Context) (_node *Annotation,
 		}
 	}
 	if value, ok := auo.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldName,
-		})
+		_spec.SetField(annotation.FieldName, field.TypeString, value)
 	}
 	if value, ok := auo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: annotation.FieldUpdatedAt,
-		})
+		_spec.SetField(annotation.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := auo.mutation.Size(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: annotation.FieldSize,
-		})
+		_spec.SetField(annotation.FieldSize, field.TypeInt, value)
 	}
 	if value, ok := auo.mutation.AddedSize(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: annotation.FieldSize,
-		})
+		_spec.AddField(annotation.FieldSize, field.TypeInt, value)
 	}
 	if value, ok := auo.mutation.Hash(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldHash,
-		})
+		_spec.SetField(annotation.FieldHash, field.TypeString, value)
 	}
 	if value, ok := auo.mutation.Data(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBytes,
-			Value:  value,
-			Column: annotation.FieldData,
-		})
+		_spec.SetField(annotation.FieldData, field.TypeBytes, value)
 	}
 	if value, ok := auo.mutation.MimeType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldMimeType,
-		})
+		_spec.SetField(annotation.FieldMimeType, field.TypeString, value)
 	}
 	if auo.mutation.NamespaceCleared() {
 		edge := &sqlgraph.EdgeSpec{

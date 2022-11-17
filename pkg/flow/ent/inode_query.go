@@ -23,18 +23,19 @@ import (
 // InodeQuery is the builder for querying Inode entities.
 type InodeQuery struct {
 	config
-	limit         *int
-	offset        *int
-	unique        *bool
-	order         []OrderFunc
-	fields        []string
-	predicates    []predicate.Inode
-	withNamespace *NamespaceQuery
-	withChildren  *InodeQuery
-	withParent    *InodeQuery
-	withWorkflow  *WorkflowQuery
-	withMirror    *MirrorQuery
-	withFKs       bool
+	limit           *int
+	offset          *int
+	unique          *bool
+	order           []OrderFunc
+	fields          []string
+	predicates      []predicate.Inode
+	withNamespace   *NamespaceQuery
+	withChildren    *InodeQuery
+	withParent      *InodeQuery
+	withWorkflow    *WorkflowQuery
+	withMirror      *MirrorQuery
+	withAnnotations *AnnotationQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -601,6 +602,13 @@ func (iq *InodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inode,
 			return nil, err
 		}
 	}
+	if query := iq.withAnnotations; query != nil {
+		if err := iq.loadAnnotations(ctx, query, nodes,
+			func(n *Inode) { n.Edges.Annotations = []*Annotation{} },
+			func(n *Inode, e *Annotation) { n.Edges.Annotations = append(n.Edges.Annotations, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -744,6 +752,37 @@ func (iq *InodeQuery) loadMirror(ctx context.Context, query *MirrorQuery, nodes 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "inode_mirror" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *InodeQuery) loadAnnotations(ctx context.Context, query *AnnotationQuery, nodes []*Inode, init func(*Inode), assign func(*Inode, *Annotation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Inode)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Annotation(func(s *sql.Selector) {
+		s.Where(sql.InValues(inode.AnnotationsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.inode_annotations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "inode_annotations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "inode_annotations" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

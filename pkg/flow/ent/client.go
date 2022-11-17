@@ -25,6 +25,7 @@ import (
 	"github.com/direktiv/direktiv/pkg/flow/ent/ref"
 	"github.com/direktiv/direktiv/pkg/flow/ent/revision"
 	"github.com/direktiv/direktiv/pkg/flow/ent/route"
+	"github.com/direktiv/direktiv/pkg/flow/ent/services"
 	"github.com/direktiv/direktiv/pkg/flow/ent/vardata"
 	"github.com/direktiv/direktiv/pkg/flow/ent/varref"
 	"github.com/direktiv/direktiv/pkg/flow/ent/workflow"
@@ -67,6 +68,8 @@ type Client struct {
 	Revision *RevisionClient
 	// Route is the client for interacting with the Route builders.
 	Route *RouteClient
+	// Services is the client for interacting with the Services builders.
+	Services *ServicesClient
 	// VarData is the client for interacting with the VarData builders.
 	VarData *VarDataClient
 	// VarRef is the client for interacting with the VarRef builders.
@@ -100,6 +103,7 @@ func (c *Client) init() {
 	c.Ref = NewRefClient(c.config)
 	c.Revision = NewRevisionClient(c.config)
 	c.Route = NewRouteClient(c.config)
+	c.Services = NewServicesClient(c.config)
 	c.VarData = NewVarDataClient(c.config)
 	c.VarRef = NewVarRefClient(c.config)
 	c.Workflow = NewWorkflowClient(c.config)
@@ -150,6 +154,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Ref:             NewRefClient(cfg),
 		Revision:        NewRevisionClient(cfg),
 		Route:           NewRouteClient(cfg),
+		Services:        NewServicesClient(cfg),
 		VarData:         NewVarDataClient(cfg),
 		VarRef:          NewVarRefClient(cfg),
 		Workflow:        NewWorkflowClient(cfg),
@@ -186,6 +191,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Ref:             NewRefClient(cfg),
 		Revision:        NewRevisionClient(cfg),
 		Route:           NewRouteClient(cfg),
+		Services:        NewServicesClient(cfg),
 		VarData:         NewVarDataClient(cfg),
 		VarRef:          NewVarRefClient(cfg),
 		Workflow:        NewWorkflowClient(cfg),
@@ -231,6 +237,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Ref.Use(hooks...)
 	c.Revision.Use(hooks...)
 	c.Route.Use(hooks...)
+	c.Services.Use(hooks...)
 	c.VarData.Use(hooks...)
 	c.VarRef.Use(hooks...)
 	c.Workflow.Use(hooks...)
@@ -292,7 +299,7 @@ func (c *AnnotationClient) DeleteOne(a *Annotation) *AnnotationDeleteOne {
 	return c.DeleteOneID(a.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *AnnotationClient) DeleteOneID(id uuid.UUID) *AnnotationDeleteOne {
 	builder := c.Delete().Where(annotation.ID(id))
 	builder.mutation.id = &id
@@ -324,7 +331,7 @@ func (c *AnnotationClient) GetX(ctx context.Context, id uuid.UUID) *Annotation {
 // QueryNamespace queries the namespace edge of a Annotation.
 func (c *AnnotationClient) QueryNamespace(a *Annotation) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(annotation.Table, annotation.FieldID, id),
@@ -340,7 +347,7 @@ func (c *AnnotationClient) QueryNamespace(a *Annotation) *NamespaceQuery {
 // QueryWorkflow queries the workflow edge of a Annotation.
 func (c *AnnotationClient) QueryWorkflow(a *Annotation) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(annotation.Table, annotation.FieldID, id),
@@ -356,7 +363,7 @@ func (c *AnnotationClient) QueryWorkflow(a *Annotation) *WorkflowQuery {
 // QueryInstance queries the instance edge of a Annotation.
 func (c *AnnotationClient) QueryInstance(a *Annotation) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(annotation.Table, annotation.FieldID, id),
@@ -372,7 +379,7 @@ func (c *AnnotationClient) QueryInstance(a *Annotation) *InstanceQuery {
 // QueryInode queries the inode edge of a Annotation.
 func (c *AnnotationClient) QueryInode(a *Annotation) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(annotation.Table, annotation.FieldID, id),
@@ -924,7 +931,7 @@ func (c *InodeClient) QueryMirror(i *Inode) *MirrorQuery {
 // QueryAnnotations queries the annotations edge of a Inode.
 func (c *InodeClient) QueryAnnotations(i *Inode) *AnnotationQuery {
 	query := &AnnotationQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -1158,7 +1165,7 @@ func (c *InstanceClient) QueryEventlisteners(i *Instance) *EventsQuery {
 // QueryAnnotations queries the annotations edge of a Instance.
 func (c *InstanceClient) QueryAnnotations(i *Instance) *AnnotationQuery {
 	query := &AnnotationQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1960,12 +1967,28 @@ func (c *NamespaceClient) QueryNamespacelisteners(n *Namespace) *EventsQuery {
 // QueryAnnotations queries the annotations edge of a Namespace.
 func (c *NamespaceClient) QueryAnnotations(n *Namespace) *AnnotationQuery {
 	query := &AnnotationQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
 			sqlgraph.To(annotation.Table, annotation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, namespace.AnnotationsTable, namespace.AnnotationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryServices queries the services edge of a Namespace.
+func (c *NamespaceClient) QueryServices(n *Namespace) *ServicesQuery {
+	query := &ServicesQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := n.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(namespace.Table, namespace.FieldID, id),
+			sqlgraph.To(services.Table, services.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, namespace.ServicesTable, namespace.ServicesColumn),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -2374,6 +2397,112 @@ func (c *RouteClient) QueryRef(r *Route) *RefQuery {
 // Hooks returns the client hooks.
 func (c *RouteClient) Hooks() []Hook {
 	return c.hooks.Route
+}
+
+// ServicesClient is a client for the Services schema.
+type ServicesClient struct {
+	config
+}
+
+// NewServicesClient returns a client for the Services from the given config.
+func NewServicesClient(c config) *ServicesClient {
+	return &ServicesClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `services.Hooks(f(g(h())))`.
+func (c *ServicesClient) Use(hooks ...Hook) {
+	c.hooks.Services = append(c.hooks.Services, hooks...)
+}
+
+// Create returns a builder for creating a Services entity.
+func (c *ServicesClient) Create() *ServicesCreate {
+	mutation := newServicesMutation(c.config, OpCreate)
+	return &ServicesCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Services entities.
+func (c *ServicesClient) CreateBulk(builders ...*ServicesCreate) *ServicesCreateBulk {
+	return &ServicesCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Services.
+func (c *ServicesClient) Update() *ServicesUpdate {
+	mutation := newServicesMutation(c.config, OpUpdate)
+	return &ServicesUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServicesClient) UpdateOne(s *Services) *ServicesUpdateOne {
+	mutation := newServicesMutation(c.config, OpUpdateOne, withServices(s))
+	return &ServicesUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServicesClient) UpdateOneID(id string) *ServicesUpdateOne {
+	mutation := newServicesMutation(c.config, OpUpdateOne, withServicesID(id))
+	return &ServicesUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Services.
+func (c *ServicesClient) Delete() *ServicesDelete {
+	mutation := newServicesMutation(c.config, OpDelete)
+	return &ServicesDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServicesClient) DeleteOne(s *Services) *ServicesDeleteOne {
+	return c.DeleteOneID(s.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServicesClient) DeleteOneID(id string) *ServicesDeleteOne {
+	builder := c.Delete().Where(services.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServicesDeleteOne{builder}
+}
+
+// Query returns a query builder for Services.
+func (c *ServicesClient) Query() *ServicesQuery {
+	return &ServicesQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Services entity by its id.
+func (c *ServicesClient) Get(ctx context.Context, id string) (*Services, error) {
+	return c.Query().Where(services.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServicesClient) GetX(ctx context.Context, id string) *Services {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryNamespace queries the namespace edge of a Services.
+func (c *ServicesClient) QueryNamespace(s *Services) *NamespaceQuery {
+	query := &NamespaceQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(services.Table, services.FieldID, id),
+			sqlgraph.To(namespace.Table, namespace.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, services.NamespaceTable, services.NamespaceColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ServicesClient) Hooks() []Hook {
+	return c.hooks.Services
 }
 
 // VarDataClient is a client for the VarData schema.
@@ -2868,7 +2997,7 @@ func (c *WorkflowClient) QueryWfevents(w *Workflow) *EventsQuery {
 // QueryAnnotations queries the annotations edge of a Workflow.
 func (c *WorkflowClient) QueryAnnotations(w *Workflow) *AnnotationQuery {
 	query := &AnnotationQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),

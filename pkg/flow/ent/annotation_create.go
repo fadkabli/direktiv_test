@@ -329,59 +329,31 @@ func (ac *AnnotationCreate) createSpec() (*Annotation, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := ac.mutation.Name(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldName,
-		})
+		_spec.SetField(annotation.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: annotation.FieldCreatedAt,
-		})
+		_spec.SetField(annotation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := ac.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: annotation.FieldUpdatedAt,
-		})
+		_spec.SetField(annotation.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := ac.mutation.Size(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: annotation.FieldSize,
-		})
+		_spec.SetField(annotation.FieldSize, field.TypeInt, value)
 		_node.Size = value
 	}
 	if value, ok := ac.mutation.Hash(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldHash,
-		})
+		_spec.SetField(annotation.FieldHash, field.TypeString, value)
 		_node.Hash = value
 	}
 	if value, ok := ac.mutation.Data(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBytes,
-			Value:  value,
-			Column: annotation.FieldData,
-		})
+		_spec.SetField(annotation.FieldData, field.TypeBytes, value)
 		_node.Data = value
 	}
 	if value, ok := ac.mutation.MimeType(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: annotation.FieldMimeType,
-		})
+		_spec.SetField(annotation.FieldMimeType, field.TypeString, value)
 		_node.MimeType = value
 	}
 	if nodes := ac.mutation.NamespaceIDs(); len(nodes) > 0 {

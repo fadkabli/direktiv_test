@@ -88,12 +88,6 @@ func StartServer(echan chan error) {
 		echan <- fmt.Errorf("failed to connect database client: %w", err)
 	}
 
-	// Run the auto migration tool.
-	if err := db.Schema.Create(context.Background()); err != nil {
-		logger.Errorf("failed to auto migrate database: %v", err)
-		echan <- fmt.Errorf("failed to auto migrate database: %v", err)
-	}
-
 	fServer := functionsServer{
 		db:                 db,
 		reusableCache:      make(map[string]*cacheTuple),
