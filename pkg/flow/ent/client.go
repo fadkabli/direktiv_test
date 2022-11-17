@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -124,7 +125,7 @@ func Open(driverName, dataSourceName string, options ...Option) (*Client, error)
 // is used until the transaction is committed or rolled back.
 func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, fmt.Errorf("ent: cannot start a transaction within a transaction")
+		return nil, errors.New("ent: cannot start a transaction within a transaction")
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
@@ -158,7 +159,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 // BeginTx returns a transactional client with specified options.
 func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, fmt.Errorf("ent: cannot start a transaction within a transaction")
+		return nil, errors.New("ent: cannot start a transaction within a transaction")
 	}
 	tx, err := c.driver.(interface {
 		BeginTx(context.Context, *sql.TxOptions) (dialect.Tx, error)
@@ -197,7 +198,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 //		Annotation.
 //		Query().
 //		Count(ctx)
-//
 func (c *Client) Debug() *Client {
 	if c.debug {
 		return c
@@ -446,7 +446,7 @@ func (c *CloudEventsClient) DeleteOne(ce *CloudEvents) *CloudEventsDeleteOne {
 	return c.DeleteOneID(ce.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *CloudEventsClient) DeleteOneID(id uuid.UUID) *CloudEventsDeleteOne {
 	builder := c.Delete().Where(cloudevents.ID(id))
 	builder.mutation.id = &id
@@ -478,7 +478,7 @@ func (c *CloudEventsClient) GetX(ctx context.Context, id uuid.UUID) *CloudEvents
 // QueryNamespace queries the namespace edge of a CloudEvents.
 func (c *CloudEventsClient) QueryNamespace(ce *CloudEvents) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ce.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(cloudevents.Table, cloudevents.FieldID, id),
@@ -552,7 +552,7 @@ func (c *EventsClient) DeleteOne(e *Events) *EventsDeleteOne {
 	return c.DeleteOneID(e.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *EventsClient) DeleteOneID(id uuid.UUID) *EventsDeleteOne {
 	builder := c.Delete().Where(events.ID(id))
 	builder.mutation.id = &id
@@ -584,7 +584,7 @@ func (c *EventsClient) GetX(ctx context.Context, id uuid.UUID) *Events {
 // QueryWorkflow queries the workflow edge of a Events.
 func (c *EventsClient) QueryWorkflow(e *Events) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(events.Table, events.FieldID, id),
@@ -600,7 +600,7 @@ func (c *EventsClient) QueryWorkflow(e *Events) *WorkflowQuery {
 // QueryWfeventswait queries the wfeventswait edge of a Events.
 func (c *EventsClient) QueryWfeventswait(e *Events) *EventsWaitQuery {
 	query := &EventsWaitQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(events.Table, events.FieldID, id),
@@ -616,7 +616,7 @@ func (c *EventsClient) QueryWfeventswait(e *Events) *EventsWaitQuery {
 // QueryInstance queries the instance edge of a Events.
 func (c *EventsClient) QueryInstance(e *Events) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(events.Table, events.FieldID, id),
@@ -632,7 +632,7 @@ func (c *EventsClient) QueryInstance(e *Events) *InstanceQuery {
 // QueryNamespace queries the namespace edge of a Events.
 func (c *EventsClient) QueryNamespace(e *Events) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(events.Table, events.FieldID, id),
@@ -706,7 +706,7 @@ func (c *EventsWaitClient) DeleteOne(ew *EventsWait) *EventsWaitDeleteOne {
 	return c.DeleteOneID(ew.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *EventsWaitClient) DeleteOneID(id uuid.UUID) *EventsWaitDeleteOne {
 	builder := c.Delete().Where(eventswait.ID(id))
 	builder.mutation.id = &id
@@ -738,7 +738,7 @@ func (c *EventsWaitClient) GetX(ctx context.Context, id uuid.UUID) *EventsWait {
 // QueryWorkflowevent queries the workflowevent edge of a EventsWait.
 func (c *EventsWaitClient) QueryWorkflowevent(ew *EventsWait) *EventsQuery {
 	query := &EventsQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ew.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(eventswait.Table, eventswait.FieldID, id),
@@ -812,7 +812,7 @@ func (c *InodeClient) DeleteOne(i *Inode) *InodeDeleteOne {
 	return c.DeleteOneID(i.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *InodeClient) DeleteOneID(id uuid.UUID) *InodeDeleteOne {
 	builder := c.Delete().Where(inode.ID(id))
 	builder.mutation.id = &id
@@ -844,7 +844,7 @@ func (c *InodeClient) GetX(ctx context.Context, id uuid.UUID) *Inode {
 // QueryNamespace queries the namespace edge of a Inode.
 func (c *InodeClient) QueryNamespace(i *Inode) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -860,7 +860,7 @@ func (c *InodeClient) QueryNamespace(i *Inode) *NamespaceQuery {
 // QueryChildren queries the children edge of a Inode.
 func (c *InodeClient) QueryChildren(i *Inode) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -876,7 +876,7 @@ func (c *InodeClient) QueryChildren(i *Inode) *InodeQuery {
 // QueryParent queries the parent edge of a Inode.
 func (c *InodeClient) QueryParent(i *Inode) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -892,7 +892,7 @@ func (c *InodeClient) QueryParent(i *Inode) *InodeQuery {
 // QueryWorkflow queries the workflow edge of a Inode.
 func (c *InodeClient) QueryWorkflow(i *Inode) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -908,7 +908,7 @@ func (c *InodeClient) QueryWorkflow(i *Inode) *WorkflowQuery {
 // QueryMirror queries the mirror edge of a Inode.
 func (c *InodeClient) QueryMirror(i *Inode) *MirrorQuery {
 	query := &MirrorQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(inode.Table, inode.FieldID, id),
@@ -998,7 +998,7 @@ func (c *InstanceClient) DeleteOne(i *Instance) *InstanceDeleteOne {
 	return c.DeleteOneID(i.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *InstanceClient) DeleteOneID(id uuid.UUID) *InstanceDeleteOne {
 	builder := c.Delete().Where(instance.ID(id))
 	builder.mutation.id = &id
@@ -1030,7 +1030,7 @@ func (c *InstanceClient) GetX(ctx context.Context, id uuid.UUID) *Instance {
 // QueryNamespace queries the namespace edge of a Instance.
 func (c *InstanceClient) QueryNamespace(i *Instance) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1046,7 +1046,7 @@ func (c *InstanceClient) QueryNamespace(i *Instance) *NamespaceQuery {
 // QueryWorkflow queries the workflow edge of a Instance.
 func (c *InstanceClient) QueryWorkflow(i *Instance) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1062,7 +1062,7 @@ func (c *InstanceClient) QueryWorkflow(i *Instance) *WorkflowQuery {
 // QueryRevision queries the revision edge of a Instance.
 func (c *InstanceClient) QueryRevision(i *Instance) *RevisionQuery {
 	query := &RevisionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1078,7 +1078,7 @@ func (c *InstanceClient) QueryRevision(i *Instance) *RevisionQuery {
 // QueryLogs queries the logs edge of a Instance.
 func (c *InstanceClient) QueryLogs(i *Instance) *LogMsgQuery {
 	query := &LogMsgQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1094,7 +1094,7 @@ func (c *InstanceClient) QueryLogs(i *Instance) *LogMsgQuery {
 // QueryVars queries the vars edge of a Instance.
 func (c *InstanceClient) QueryVars(i *Instance) *VarRefQuery {
 	query := &VarRefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1110,7 +1110,7 @@ func (c *InstanceClient) QueryVars(i *Instance) *VarRefQuery {
 // QueryRuntime queries the runtime edge of a Instance.
 func (c *InstanceClient) QueryRuntime(i *Instance) *InstanceRuntimeQuery {
 	query := &InstanceRuntimeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1126,7 +1126,7 @@ func (c *InstanceClient) QueryRuntime(i *Instance) *InstanceRuntimeQuery {
 // QueryChildren queries the children edge of a Instance.
 func (c *InstanceClient) QueryChildren(i *Instance) *InstanceRuntimeQuery {
 	query := &InstanceRuntimeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1142,7 +1142,7 @@ func (c *InstanceClient) QueryChildren(i *Instance) *InstanceRuntimeQuery {
 // QueryEventlisteners queries the eventlisteners edge of a Instance.
 func (c *InstanceClient) QueryEventlisteners(i *Instance) *EventsQuery {
 	query := &EventsQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instance.Table, instance.FieldID, id),
@@ -1232,7 +1232,7 @@ func (c *InstanceRuntimeClient) DeleteOne(ir *InstanceRuntime) *InstanceRuntimeD
 	return c.DeleteOneID(ir.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *InstanceRuntimeClient) DeleteOneID(id uuid.UUID) *InstanceRuntimeDeleteOne {
 	builder := c.Delete().Where(instanceruntime.ID(id))
 	builder.mutation.id = &id
@@ -1264,7 +1264,7 @@ func (c *InstanceRuntimeClient) GetX(ctx context.Context, id uuid.UUID) *Instanc
 // QueryInstance queries the instance edge of a InstanceRuntime.
 func (c *InstanceRuntimeClient) QueryInstance(ir *InstanceRuntime) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ir.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instanceruntime.Table, instanceruntime.FieldID, id),
@@ -1280,7 +1280,7 @@ func (c *InstanceRuntimeClient) QueryInstance(ir *InstanceRuntime) *InstanceQuer
 // QueryCaller queries the caller edge of a InstanceRuntime.
 func (c *InstanceRuntimeClient) QueryCaller(ir *InstanceRuntime) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ir.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(instanceruntime.Table, instanceruntime.FieldID, id),
@@ -1354,7 +1354,7 @@ func (c *LogMsgClient) DeleteOne(lm *LogMsg) *LogMsgDeleteOne {
 	return c.DeleteOneID(lm.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *LogMsgClient) DeleteOneID(id uuid.UUID) *LogMsgDeleteOne {
 	builder := c.Delete().Where(logmsg.ID(id))
 	builder.mutation.id = &id
@@ -1386,7 +1386,7 @@ func (c *LogMsgClient) GetX(ctx context.Context, id uuid.UUID) *LogMsg {
 // QueryNamespace queries the namespace edge of a LogMsg.
 func (c *LogMsgClient) QueryNamespace(lm *LogMsg) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := lm.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(logmsg.Table, logmsg.FieldID, id),
@@ -1402,7 +1402,7 @@ func (c *LogMsgClient) QueryNamespace(lm *LogMsg) *NamespaceQuery {
 // QueryWorkflow queries the workflow edge of a LogMsg.
 func (c *LogMsgClient) QueryWorkflow(lm *LogMsg) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := lm.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(logmsg.Table, logmsg.FieldID, id),
@@ -1418,7 +1418,7 @@ func (c *LogMsgClient) QueryWorkflow(lm *LogMsg) *WorkflowQuery {
 // QueryInstance queries the instance edge of a LogMsg.
 func (c *LogMsgClient) QueryInstance(lm *LogMsg) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := lm.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(logmsg.Table, logmsg.FieldID, id),
@@ -1434,7 +1434,7 @@ func (c *LogMsgClient) QueryInstance(lm *LogMsg) *InstanceQuery {
 // QueryActivity queries the activity edge of a LogMsg.
 func (c *LogMsgClient) QueryActivity(lm *LogMsg) *MirrorActivityQuery {
 	query := &MirrorActivityQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := lm.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(logmsg.Table, logmsg.FieldID, id),
@@ -1508,7 +1508,7 @@ func (c *MirrorClient) DeleteOne(m *Mirror) *MirrorDeleteOne {
 	return c.DeleteOneID(m.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *MirrorClient) DeleteOneID(id uuid.UUID) *MirrorDeleteOne {
 	builder := c.Delete().Where(mirror.ID(id))
 	builder.mutation.id = &id
@@ -1540,7 +1540,7 @@ func (c *MirrorClient) GetX(ctx context.Context, id uuid.UUID) *Mirror {
 // QueryNamespace queries the namespace edge of a Mirror.
 func (c *MirrorClient) QueryNamespace(m *Mirror) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirror.Table, mirror.FieldID, id),
@@ -1556,7 +1556,7 @@ func (c *MirrorClient) QueryNamespace(m *Mirror) *NamespaceQuery {
 // QueryInode queries the inode edge of a Mirror.
 func (c *MirrorClient) QueryInode(m *Mirror) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirror.Table, mirror.FieldID, id),
@@ -1572,7 +1572,7 @@ func (c *MirrorClient) QueryInode(m *Mirror) *InodeQuery {
 // QueryActivities queries the activities edge of a Mirror.
 func (c *MirrorClient) QueryActivities(m *Mirror) *MirrorActivityQuery {
 	query := &MirrorActivityQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirror.Table, mirror.FieldID, id),
@@ -1646,7 +1646,7 @@ func (c *MirrorActivityClient) DeleteOne(ma *MirrorActivity) *MirrorActivityDele
 	return c.DeleteOneID(ma.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *MirrorActivityClient) DeleteOneID(id uuid.UUID) *MirrorActivityDeleteOne {
 	builder := c.Delete().Where(mirroractivity.ID(id))
 	builder.mutation.id = &id
@@ -1678,7 +1678,7 @@ func (c *MirrorActivityClient) GetX(ctx context.Context, id uuid.UUID) *MirrorAc
 // QueryNamespace queries the namespace edge of a MirrorActivity.
 func (c *MirrorActivityClient) QueryNamespace(ma *MirrorActivity) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ma.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirroractivity.Table, mirroractivity.FieldID, id),
@@ -1694,7 +1694,7 @@ func (c *MirrorActivityClient) QueryNamespace(ma *MirrorActivity) *NamespaceQuer
 // QueryMirror queries the mirror edge of a MirrorActivity.
 func (c *MirrorActivityClient) QueryMirror(ma *MirrorActivity) *MirrorQuery {
 	query := &MirrorQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ma.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirroractivity.Table, mirroractivity.FieldID, id),
@@ -1710,7 +1710,7 @@ func (c *MirrorActivityClient) QueryMirror(ma *MirrorActivity) *MirrorQuery {
 // QueryLogs queries the logs edge of a MirrorActivity.
 func (c *MirrorActivityClient) QueryLogs(ma *MirrorActivity) *LogMsgQuery {
 	query := &LogMsgQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ma.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mirroractivity.Table, mirroractivity.FieldID, id),
@@ -1784,7 +1784,7 @@ func (c *NamespaceClient) DeleteOne(n *Namespace) *NamespaceDeleteOne {
 	return c.DeleteOneID(n.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *NamespaceClient) DeleteOneID(id uuid.UUID) *NamespaceDeleteOne {
 	builder := c.Delete().Where(namespace.ID(id))
 	builder.mutation.id = &id
@@ -1816,7 +1816,7 @@ func (c *NamespaceClient) GetX(ctx context.Context, id uuid.UUID) *Namespace {
 // QueryInodes queries the inodes edge of a Namespace.
 func (c *NamespaceClient) QueryInodes(n *Namespace) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1832,7 +1832,7 @@ func (c *NamespaceClient) QueryInodes(n *Namespace) *InodeQuery {
 // QueryWorkflows queries the workflows edge of a Namespace.
 func (c *NamespaceClient) QueryWorkflows(n *Namespace) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1848,7 +1848,7 @@ func (c *NamespaceClient) QueryWorkflows(n *Namespace) *WorkflowQuery {
 // QueryMirrors queries the mirrors edge of a Namespace.
 func (c *NamespaceClient) QueryMirrors(n *Namespace) *MirrorQuery {
 	query := &MirrorQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1864,7 +1864,7 @@ func (c *NamespaceClient) QueryMirrors(n *Namespace) *MirrorQuery {
 // QueryMirrorActivities queries the mirror_activities edge of a Namespace.
 func (c *NamespaceClient) QueryMirrorActivities(n *Namespace) *MirrorActivityQuery {
 	query := &MirrorActivityQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1880,7 +1880,7 @@ func (c *NamespaceClient) QueryMirrorActivities(n *Namespace) *MirrorActivityQue
 // QueryInstances queries the instances edge of a Namespace.
 func (c *NamespaceClient) QueryInstances(n *Namespace) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1896,7 +1896,7 @@ func (c *NamespaceClient) QueryInstances(n *Namespace) *InstanceQuery {
 // QueryLogs queries the logs edge of a Namespace.
 func (c *NamespaceClient) QueryLogs(n *Namespace) *LogMsgQuery {
 	query := &LogMsgQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1912,7 +1912,7 @@ func (c *NamespaceClient) QueryLogs(n *Namespace) *LogMsgQuery {
 // QueryVars queries the vars edge of a Namespace.
 func (c *NamespaceClient) QueryVars(n *Namespace) *VarRefQuery {
 	query := &VarRefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1928,7 +1928,7 @@ func (c *NamespaceClient) QueryVars(n *Namespace) *VarRefQuery {
 // QueryCloudevents queries the cloudevents edge of a Namespace.
 func (c *NamespaceClient) QueryCloudevents(n *Namespace) *CloudEventsQuery {
 	query := &CloudEventsQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -1944,7 +1944,7 @@ func (c *NamespaceClient) QueryCloudevents(n *Namespace) *CloudEventsQuery {
 // QueryNamespacelisteners queries the namespacelisteners edge of a Namespace.
 func (c *NamespaceClient) QueryNamespacelisteners(n *Namespace) *EventsQuery {
 	query := &EventsQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := n.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(namespace.Table, namespace.FieldID, id),
@@ -2034,7 +2034,7 @@ func (c *RefClient) DeleteOne(r *Ref) *RefDeleteOne {
 	return c.DeleteOneID(r.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *RefClient) DeleteOneID(id uuid.UUID) *RefDeleteOne {
 	builder := c.Delete().Where(ref.ID(id))
 	builder.mutation.id = &id
@@ -2066,7 +2066,7 @@ func (c *RefClient) GetX(ctx context.Context, id uuid.UUID) *Ref {
 // QueryWorkflow queries the workflow edge of a Ref.
 func (c *RefClient) QueryWorkflow(r *Ref) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ref.Table, ref.FieldID, id),
@@ -2082,7 +2082,7 @@ func (c *RefClient) QueryWorkflow(r *Ref) *WorkflowQuery {
 // QueryRevision queries the revision edge of a Ref.
 func (c *RefClient) QueryRevision(r *Ref) *RevisionQuery {
 	query := &RevisionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ref.Table, ref.FieldID, id),
@@ -2098,7 +2098,7 @@ func (c *RefClient) QueryRevision(r *Ref) *RevisionQuery {
 // QueryRoutes queries the routes edge of a Ref.
 func (c *RefClient) QueryRoutes(r *Ref) *RouteQuery {
 	query := &RouteQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ref.Table, ref.FieldID, id),
@@ -2172,7 +2172,7 @@ func (c *RevisionClient) DeleteOne(r *Revision) *RevisionDeleteOne {
 	return c.DeleteOneID(r.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *RevisionClient) DeleteOneID(id uuid.UUID) *RevisionDeleteOne {
 	builder := c.Delete().Where(revision.ID(id))
 	builder.mutation.id = &id
@@ -2204,7 +2204,7 @@ func (c *RevisionClient) GetX(ctx context.Context, id uuid.UUID) *Revision {
 // QueryWorkflow queries the workflow edge of a Revision.
 func (c *RevisionClient) QueryWorkflow(r *Revision) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(revision.Table, revision.FieldID, id),
@@ -2220,7 +2220,7 @@ func (c *RevisionClient) QueryWorkflow(r *Revision) *WorkflowQuery {
 // QueryRefs queries the refs edge of a Revision.
 func (c *RevisionClient) QueryRefs(r *Revision) *RefQuery {
 	query := &RefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(revision.Table, revision.FieldID, id),
@@ -2236,7 +2236,7 @@ func (c *RevisionClient) QueryRefs(r *Revision) *RefQuery {
 // QueryInstances queries the instances edge of a Revision.
 func (c *RevisionClient) QueryInstances(r *Revision) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(revision.Table, revision.FieldID, id),
@@ -2310,7 +2310,7 @@ func (c *RouteClient) DeleteOne(r *Route) *RouteDeleteOne {
 	return c.DeleteOneID(r.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *RouteClient) DeleteOneID(id uuid.UUID) *RouteDeleteOne {
 	builder := c.Delete().Where(route.ID(id))
 	builder.mutation.id = &id
@@ -2342,7 +2342,7 @@ func (c *RouteClient) GetX(ctx context.Context, id uuid.UUID) *Route {
 // QueryWorkflow queries the workflow edge of a Route.
 func (c *RouteClient) QueryWorkflow(r *Route) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(route.Table, route.FieldID, id),
@@ -2358,7 +2358,7 @@ func (c *RouteClient) QueryWorkflow(r *Route) *WorkflowQuery {
 // QueryRef queries the ref edge of a Route.
 func (c *RouteClient) QueryRef(r *Route) *RefQuery {
 	query := &RefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(route.Table, route.FieldID, id),
@@ -2432,7 +2432,7 @@ func (c *VarDataClient) DeleteOne(vd *VarData) *VarDataDeleteOne {
 	return c.DeleteOneID(vd.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *VarDataClient) DeleteOneID(id uuid.UUID) *VarDataDeleteOne {
 	builder := c.Delete().Where(vardata.ID(id))
 	builder.mutation.id = &id
@@ -2464,7 +2464,7 @@ func (c *VarDataClient) GetX(ctx context.Context, id uuid.UUID) *VarData {
 // QueryVarrefs queries the varrefs edge of a VarData.
 func (c *VarDataClient) QueryVarrefs(vd *VarData) *VarRefQuery {
 	query := &VarRefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vd.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vardata.Table, vardata.FieldID, id),
@@ -2538,7 +2538,7 @@ func (c *VarRefClient) DeleteOne(vr *VarRef) *VarRefDeleteOne {
 	return c.DeleteOneID(vr.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *VarRefClient) DeleteOneID(id uuid.UUID) *VarRefDeleteOne {
 	builder := c.Delete().Where(varref.ID(id))
 	builder.mutation.id = &id
@@ -2570,7 +2570,7 @@ func (c *VarRefClient) GetX(ctx context.Context, id uuid.UUID) *VarRef {
 // QueryVardata queries the vardata edge of a VarRef.
 func (c *VarRefClient) QueryVardata(vr *VarRef) *VarDataQuery {
 	query := &VarDataQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(varref.Table, varref.FieldID, id),
@@ -2586,7 +2586,7 @@ func (c *VarRefClient) QueryVardata(vr *VarRef) *VarDataQuery {
 // QueryNamespace queries the namespace edge of a VarRef.
 func (c *VarRefClient) QueryNamespace(vr *VarRef) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(varref.Table, varref.FieldID, id),
@@ -2602,7 +2602,7 @@ func (c *VarRefClient) QueryNamespace(vr *VarRef) *NamespaceQuery {
 // QueryWorkflow queries the workflow edge of a VarRef.
 func (c *VarRefClient) QueryWorkflow(vr *VarRef) *WorkflowQuery {
 	query := &WorkflowQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(varref.Table, varref.FieldID, id),
@@ -2618,7 +2618,7 @@ func (c *VarRefClient) QueryWorkflow(vr *VarRef) *WorkflowQuery {
 // QueryInstance queries the instance edge of a VarRef.
 func (c *VarRefClient) QueryInstance(vr *VarRef) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(varref.Table, varref.FieldID, id),
@@ -2692,7 +2692,7 @@ func (c *WorkflowClient) DeleteOne(w *Workflow) *WorkflowDeleteOne {
 	return c.DeleteOneID(w.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *WorkflowClient) DeleteOneID(id uuid.UUID) *WorkflowDeleteOne {
 	builder := c.Delete().Where(workflow.ID(id))
 	builder.mutation.id = &id
@@ -2724,7 +2724,7 @@ func (c *WorkflowClient) GetX(ctx context.Context, id uuid.UUID) *Workflow {
 // QueryInode queries the inode edge of a Workflow.
 func (c *WorkflowClient) QueryInode(w *Workflow) *InodeQuery {
 	query := &InodeQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2740,7 +2740,7 @@ func (c *WorkflowClient) QueryInode(w *Workflow) *InodeQuery {
 // QueryNamespace queries the namespace edge of a Workflow.
 func (c *WorkflowClient) QueryNamespace(w *Workflow) *NamespaceQuery {
 	query := &NamespaceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2756,7 +2756,7 @@ func (c *WorkflowClient) QueryNamespace(w *Workflow) *NamespaceQuery {
 // QueryRevisions queries the revisions edge of a Workflow.
 func (c *WorkflowClient) QueryRevisions(w *Workflow) *RevisionQuery {
 	query := &RevisionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2772,7 +2772,7 @@ func (c *WorkflowClient) QueryRevisions(w *Workflow) *RevisionQuery {
 // QueryRefs queries the refs edge of a Workflow.
 func (c *WorkflowClient) QueryRefs(w *Workflow) *RefQuery {
 	query := &RefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2788,7 +2788,7 @@ func (c *WorkflowClient) QueryRefs(w *Workflow) *RefQuery {
 // QueryInstances queries the instances edge of a Workflow.
 func (c *WorkflowClient) QueryInstances(w *Workflow) *InstanceQuery {
 	query := &InstanceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2804,7 +2804,7 @@ func (c *WorkflowClient) QueryInstances(w *Workflow) *InstanceQuery {
 // QueryRoutes queries the routes edge of a Workflow.
 func (c *WorkflowClient) QueryRoutes(w *Workflow) *RouteQuery {
 	query := &RouteQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2820,7 +2820,7 @@ func (c *WorkflowClient) QueryRoutes(w *Workflow) *RouteQuery {
 // QueryLogs queries the logs edge of a Workflow.
 func (c *WorkflowClient) QueryLogs(w *Workflow) *LogMsgQuery {
 	query := &LogMsgQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2836,7 +2836,7 @@ func (c *WorkflowClient) QueryLogs(w *Workflow) *LogMsgQuery {
 // QueryVars queries the vars edge of a Workflow.
 func (c *WorkflowClient) QueryVars(w *Workflow) *VarRefQuery {
 	query := &VarRefQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
@@ -2852,7 +2852,7 @@ func (c *WorkflowClient) QueryVars(w *Workflow) *VarRefQuery {
 // QueryWfevents queries the wfevents edge of a Workflow.
 func (c *WorkflowClient) QueryWfevents(w *Workflow) *EventsQuery {
 	query := &EventsQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflow.Table, workflow.FieldID, id),
