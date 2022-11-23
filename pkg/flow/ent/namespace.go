@@ -52,9 +52,11 @@ type NamespaceEdges struct {
 	Namespacelisteners []*Events `json:"namespacelisteners,omitempty"`
 	// Annotations holds the value of the annotations edge.
 	Annotations []*Annotation `json:"annotations,omitempty"`
+	// Services holds the value of the services edge.
+	Services []*Services `json:"services,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [10]bool
+	loadedTypes [11]bool
 }
 
 // InodesOrErr returns the Inodes value or an error if the edge
@@ -147,9 +149,18 @@ func (e NamespaceEdges) AnnotationsOrErr() ([]*Annotation, error) {
 	return nil, &NotLoadedError{edge: "annotations"}
 }
 
+// ServicesOrErr returns the Services value or an error if the edge
+// was not loaded in eager-loading.
+func (e NamespaceEdges) ServicesOrErr() ([]*Services, error) {
+	if e.loadedTypes[10] {
+		return e.Services, nil
+	}
+	return nil, &NotLoadedError{edge: "services"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Namespace) scanValues(columns []string) ([]interface{}, error) {
-	values := make([]interface{}, len(columns))
+func (*Namespace) scanValues(columns []string) ([]any, error) {
+	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case namespace.FieldConfig, namespace.FieldName:
@@ -167,7 +178,7 @@ func (*Namespace) scanValues(columns []string) ([]interface{}, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Namespace fields.
-func (n *Namespace) assignValues(columns []string, values []interface{}) error {
+func (n *Namespace) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -256,6 +267,11 @@ func (n *Namespace) QueryNamespacelisteners() *EventsQuery {
 // QueryAnnotations queries the "annotations" edge of the Namespace entity.
 func (n *Namespace) QueryAnnotations() *AnnotationQuery {
 	return (&NamespaceClient{config: n.config}).QueryAnnotations(n)
+}
+
+// QueryServices queries the "services" edge of the Namespace entity.
+func (n *Namespace) QueryServices() *ServicesQuery {
+	return (&NamespaceClient{config: n.config}).QueryServices(n)
 }
 
 // Update returns a builder for updating this Namespace.

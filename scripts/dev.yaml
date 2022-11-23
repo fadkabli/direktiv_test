@@ -25,13 +25,11 @@ functions:
   tag: "latest"
   sidecar: "sidecar"
   initPodImage: "init-pod"
-
+  
 database:
   host: "direktiv-primary.postgres.svc"
   port: 5432
   user: "direktiv"
-  password: "2+4YJe(TNxSnNfSA)T*9tWGy"
+  password: "vhkx5<(IR{6g?b|kvTBIR0iy"
   name: "direktiv"
   sslmode: require
-
-

@@ -21,6 +21,7 @@ import (
 	"github.com/direktiv/direktiv/pkg/flow/ent/mirroractivity"
 	"github.com/direktiv/direktiv/pkg/flow/ent/namespace"
 	"github.com/direktiv/direktiv/pkg/flow/ent/predicate"
+	"github.com/direktiv/direktiv/pkg/flow/ent/services"
 	"github.com/direktiv/direktiv/pkg/flow/ent/varref"
 	"github.com/direktiv/direktiv/pkg/flow/ent/workflow"
 	"github.com/google/uuid"
@@ -29,8 +30,9 @@ import (
 // NamespaceUpdate is the builder for updating Namespace entities.
 type NamespaceUpdate struct {
 	config
-	hooks    []Hook
-	mutation *NamespaceMutation
+	hooks     []Hook
+	mutation  *NamespaceMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the NamespaceUpdate builder.
@@ -213,6 +215,21 @@ func (nu *NamespaceUpdate) AddAnnotations(a ...*Annotation) *NamespaceUpdate {
 		ids[i] = a[i].ID
 	}
 	return nu.AddAnnotationIDs(ids...)
+}
+
+// AddServiceIDs adds the "services" edge to the Services entity by IDs.
+func (nu *NamespaceUpdate) AddServiceIDs(ids ...uuid.UUID) *NamespaceUpdate {
+	nu.mutation.AddServiceIDs(ids...)
+	return nu
+}
+
+// AddServices adds the "services" edges to the Services entity.
+func (nu *NamespaceUpdate) AddServices(s ...*Services) *NamespaceUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return nu.AddServiceIDs(ids...)
 }
 
 // Mutation returns the NamespaceMutation object of the builder.
@@ -430,6 +447,27 @@ func (nu *NamespaceUpdate) RemoveAnnotations(a ...*Annotation) *NamespaceUpdate 
 	return nu.RemoveAnnotationIDs(ids...)
 }
 
+// ClearServices clears all "services" edges to the Services entity.
+func (nu *NamespaceUpdate) ClearServices() *NamespaceUpdate {
+	nu.mutation.ClearServices()
+	return nu
+}
+
+// RemoveServiceIDs removes the "services" edge to Services entities by IDs.
+func (nu *NamespaceUpdate) RemoveServiceIDs(ids ...uuid.UUID) *NamespaceUpdate {
+	nu.mutation.RemoveServiceIDs(ids...)
+	return nu
+}
+
+// RemoveServices removes "services" edges to Services entities.
+func (nu *NamespaceUpdate) RemoveServices(s ...*Services) *NamespaceUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return nu.RemoveServiceIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (nu *NamespaceUpdate) Save(ctx context.Context) (int, error) {
 	var (
@@ -509,6 +547,12 @@ func (nu *NamespaceUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (nu *NamespaceUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *NamespaceUpdate {
+	nu.modifiers = append(nu.modifiers, modifiers...)
+	return nu
+}
+
 func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -528,25 +572,13 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := nu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: namespace.FieldUpdatedAt,
-		})
+		_spec.SetField(namespace.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := nu.mutation.Config(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: namespace.FieldConfig,
-		})
+		_spec.SetField(namespace.FieldConfig, field.TypeString, value)
 	}
 	if value, ok := nu.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: namespace.FieldName,
-		})
+		_spec.SetField(namespace.FieldName, field.TypeString, value)
 	}
 	if nu.mutation.InodesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1088,6 +1120,61 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if nu.mutation.ServicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nu.mutation.RemovedServicesIDs(); len(nodes) > 0 && !nu.mutation.ServicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nu.mutation.ServicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	_spec.AddModifiers(nu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, nu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{namespace.Label}
@@ -1102,9 +1189,10 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // NamespaceUpdateOne is the builder for updating a single Namespace entity.
 type NamespaceUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *NamespaceMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *NamespaceMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -1281,6 +1369,21 @@ func (nuo *NamespaceUpdateOne) AddAnnotations(a ...*Annotation) *NamespaceUpdate
 		ids[i] = a[i].ID
 	}
 	return nuo.AddAnnotationIDs(ids...)
+}
+
+// AddServiceIDs adds the "services" edge to the Services entity by IDs.
+func (nuo *NamespaceUpdateOne) AddServiceIDs(ids ...uuid.UUID) *NamespaceUpdateOne {
+	nuo.mutation.AddServiceIDs(ids...)
+	return nuo
+}
+
+// AddServices adds the "services" edges to the Services entity.
+func (nuo *NamespaceUpdateOne) AddServices(s ...*Services) *NamespaceUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return nuo.AddServiceIDs(ids...)
 }
 
 // Mutation returns the NamespaceMutation object of the builder.
@@ -1498,6 +1601,27 @@ func (nuo *NamespaceUpdateOne) RemoveAnnotations(a ...*Annotation) *NamespaceUpd
 	return nuo.RemoveAnnotationIDs(ids...)
 }
 
+// ClearServices clears all "services" edges to the Services entity.
+func (nuo *NamespaceUpdateOne) ClearServices() *NamespaceUpdateOne {
+	nuo.mutation.ClearServices()
+	return nuo
+}
+
+// RemoveServiceIDs removes the "services" edge to Services entities by IDs.
+func (nuo *NamespaceUpdateOne) RemoveServiceIDs(ids ...uuid.UUID) *NamespaceUpdateOne {
+	nuo.mutation.RemoveServiceIDs(ids...)
+	return nuo
+}
+
+// RemoveServices removes "services" edges to Services entities.
+func (nuo *NamespaceUpdateOne) RemoveServices(s ...*Services) *NamespaceUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return nuo.RemoveServiceIDs(ids...)
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (nuo *NamespaceUpdateOne) Select(field string, fields ...string) *NamespaceUpdateOne {
@@ -1590,6 +1714,12 @@ func (nuo *NamespaceUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (nuo *NamespaceUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *NamespaceUpdateOne {
+	nuo.modifiers = append(nuo.modifiers, modifiers...)
+	return nuo
+}
+
 func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -1626,25 +1756,13 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 		}
 	}
 	if value, ok := nuo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: namespace.FieldUpdatedAt,
-		})
+		_spec.SetField(namespace.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := nuo.mutation.Config(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: namespace.FieldConfig,
-		})
+		_spec.SetField(namespace.FieldConfig, field.TypeString, value)
 	}
 	if value, ok := nuo.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: namespace.FieldName,
-		})
+		_spec.SetField(namespace.FieldName, field.TypeString, value)
 	}
 	if nuo.mutation.InodesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2186,6 +2304,61 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if nuo.mutation.ServicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nuo.mutation.RemovedServicesIDs(); len(nodes) > 0 && !nuo.mutation.ServicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nuo.mutation.ServicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   namespace.ServicesTable,
+			Columns: []string{namespace.ServicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: services.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	_spec.AddModifiers(nuo.modifiers...)
 	_node = &Namespace{config: nuo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
