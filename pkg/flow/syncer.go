@@ -2,9 +2,12 @@ package flow
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/md5"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1013,9 +1016,79 @@ func (syncer *syncer) hardSync(ctx context.Context, am *activityMemory) error {
 		return err
 	}
 
+	err = syncer.syncCloudEventFilters(ctx, tx, md, model)
+	if err != nil {
+		return err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return err
+	}
+
+	return nil
+
+}
+
+func (syncer *syncer) syncCloudEventFilters(ctx context.Context, tx *ent.Tx, md *mirData, model *mirrorModel) error {
+
+	dbs, err := syncer.flow.getCloudEventFilters(ctx, md.ns())
+	if err != nil {
+		return fmt.Errorf("failed to query existing CloudEvent filters: %w", err)
+	}
+
+	have := make(map[string]string)
+	want := make(map[string]string)
+	want2 := make(map[string]string)
+
+	checksum := func(data []byte) string {
+		hasher := md5.New()
+		_, err = io.Copy(hasher, bytes.NewReader(data))
+		if err != nil {
+			panic(err)
+		}
+		x := hasher.Sum(nil)
+		s := base64.StdEncoding.EncodeToString(x)
+		return s
+	}
+
+	for _, x := range dbs {
+		have[x.Name] = checksum([]byte(x.Jscode))
+	}
+
+	for _, x := range model.filters {
+		want[x.name] = checksum(x.data)
+		want2[x.name] = string(x.data)
+	}
+
+	for k := range have {
+		if _, exist := want[k]; !exist {
+			err = syncer.flow.deleteCloudEventFilter(ctx, tx.CloudEventFilters, md.ns(), k)
+			if err != nil {
+				return fmt.Errorf("failed to delete filter: %w", err)
+			}
+		}
+	}
+
+	for k, vw := range want {
+		if vh, exist := have[k]; !exist {
+			err = syncer.flow.createCloudEventFilter(ctx, tx.CloudEventFilters, md.ns(), k, want2[k])
+			if err != nil {
+				return fmt.Errorf("failed to create filter: %w", err)
+			}
+		} else {
+			// compare / overwrite
+			if vw != vh {
+				err = syncer.flow.deleteCloudEventFilter(ctx, tx.CloudEventFilters, md.ns(), k)
+				if err != nil {
+					return fmt.Errorf("failed to delete filter during overwriting: %w", err)
+				}
+				err = syncer.flow.createCloudEventFilter(ctx, tx.CloudEventFilters, md.ns(), k, want2[k])
+				if err != nil {
+					return fmt.Errorf("failed to create filter during overwrite: %w", err)
+				}
+			}
+		}
 	}
 
 	return nil
@@ -1127,7 +1200,13 @@ type mirrorNode struct {
 }
 
 type mirrorModel struct {
-	root *mirrorNode
+	root    *mirrorNode
+	filters []*cloudEventFilterConfig
+}
+
+type cloudEventFilterConfig struct {
+	name string
+	data []byte
 }
 
 func (model *mirrorModel) lookup(path string) (*mirrorNode, error) {
@@ -1467,6 +1546,41 @@ func (model *mirrorModel) diff(repo *localRepository) error {
 
 }
 
+func loadCloudEventFilters(ctx context.Context, repo *localRepository, model *mirrorModel, cfg *project.DirektivProjectConfig) error {
+
+	if cfg.CloudEventFilters == "" {
+		return nil
+	}
+
+	filtersPath := filepath.Clean(filepath.Join(repo.path, cfg.CloudEventFilters))
+
+	dirents, err := os.ReadDir(filtersPath)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("failed to read filters directory: %w", err)
+		}
+		return nil
+	}
+
+	for _, dirent := range dirents {
+		if !dirent.IsDir() && strings.HasSuffix(dirent.Name(), ".js") {
+			name := strings.TrimSuffix(dirent.Name(), ".js") // sanitize?
+			data, err := os.ReadFile(filepath.Join(filtersPath, dirent.Name()))
+			if err != nil {
+				return fmt.Errorf("failed to read CloudEvent filter configuration: %w", err)
+			}
+			model.filters = append(model.filters, &cloudEventFilterConfig{
+				name: name,
+				data: data,
+			})
+			// log ignored file?
+		}
+	}
+
+	return nil
+
+}
+
 func buildModel(ctx context.Context, repo *localRepository) (*mirrorModel, error) {
 
 	model := new(mirrorModel)
@@ -1477,7 +1591,7 @@ func buildModel(ctx context.Context, repo *localRepository) (*mirrorModel, error
 		name:     ".",
 	}
 
-	cfg := new(project.Config)
+	cfg := new(project.DirektivProjectConfig)
 
 	scfpath := filepath.Join(repo.path, project.ConfigFile)
 	scfgbytes, err := os.ReadFile(scfpath)
@@ -1490,6 +1604,11 @@ func buildModel(ctx context.Context, repo *localRepository) (*mirrorModel, error
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal direktiv config file: %w", err)
 		}
+	}
+
+	err = loadCloudEventFilters(ctx, repo, model, cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	globbers := make([]glob.Glob, 0)
@@ -1520,7 +1639,7 @@ func buildModel(ctx context.Context, repo *localRepository) (*mirrorModel, error
 			return filepath.SkipDir
 		}
 
-		if rel == ".direktiv.yaml" {
+		if rel == project.ConfigFile {
 			return nil
 		}
 

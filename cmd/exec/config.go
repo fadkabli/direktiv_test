@@ -28,11 +28,11 @@ type ProfileConfig struct {
 }
 
 type ConfigFile struct {
-	ProfileConfig  `yaml:",inline" mapstructure:",squash"`
-	project.Config `yaml:",inline" mapstructure:",squash"`
-	Profiles       []ProfileConfig `yaml:"profiles,flow" mapstructure:"profiles"`
-	profile        string
-	path           string
+	ProfileConfig                 `yaml:",inline" mapstructure:",squash"`
+	project.DirektivProjectConfig `yaml:",inline" mapstructure:",squash"`
+	Profiles                      []ProfileConfig `yaml:"profiles,flow" mapstructure:"profiles"`
+	profile                       string
+	path                          string
 }
 
 var config ConfigFile

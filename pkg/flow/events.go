@@ -1107,6 +1107,28 @@ func (flow *flow) ApplyCloudEventFilter(ctx context.Context, in *grpc.ApplyCloud
 	return resp, err
 }
 
+func (flow *flow) deleteCloudEventFilter(ctx context.Context, cefc *ent.CloudEventFiltersClient, ns *ent.Namespace, name string) error {
+
+	_, err := cefc.
+		Delete().
+		Where(
+			enteventsfilter.And(
+				enteventsfilter.NameEQ(name),
+			)).
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	var key keyPair
+	key.filtername = name
+	key.namespace = ns.Name
+	eventFilterCache.delete(key)
+
+	return err
+}
+
 func (flow *flow) DeleteCloudEventFilter(ctx context.Context, in *grpc.DeleteCloudEventFilterRequest) (*emptypb.Empty, error) {
 
 	var resp emptypb.Empty
@@ -1124,24 +1146,46 @@ func (flow *flow) DeleteCloudEventFilter(ctx context.Context, in *grpc.DeleteClo
 		return &resp, err
 	}
 
-	_, err = flow.db.CloudEventFilters.
-		Delete().
-		Where(
-			enteventsfilter.And(
-				enteventsfilter.NameEQ(filterName),
-			)).
-		Exec(ctx)
-
+	err = flow.deleteCloudEventFilter(ctx, flow.db.CloudEventFilters, ns, filterName)
 	if err != nil {
 		return &resp, err
 	}
 
-	var key keyPair
-	key.filtername = filterName
-	key.namespace = namespace
-	eventFilterCache.delete(key)
-
 	return &resp, err
+
+}
+
+func (flow *flow) createCloudEventFilter(ctx context.Context, cefc *ent.CloudEventFiltersClient, ns *ent.Namespace, name string, script string) error {
+
+	fullScript := fmt.Sprintf("function filter() {\n %s \n}", script)
+
+	//compiling js code is needed
+	_, err := goja.Compile("filter", fullScript, false)
+	if err != nil {
+		return err
+	}
+
+	k, err := ns.QueryCloudeventfilters().Where(enteventsfilter.NameEQ(name)).Count(ctx)
+	if err != nil {
+		return err
+	}
+
+	if k != 0 {
+		err = fmt.Errorf("cloud event filter %s already exist", name)
+		return err
+	}
+
+	_, err = cefc.Create().SetName(name).SetNamespace(ns).SetJscode(script).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	var key keyPair
+	key.filtername = name
+	key.namespace = ns.Name
+	eventFilterCache.put(key, script)
+
+	return err
 
 }
 
@@ -1153,40 +1197,28 @@ func (flow *flow) CreateCloudEventFilter(ctx context.Context, in *grpc.CreateClo
 	filterName := in.GetFiltername()
 	script := in.GetJsCode()
 
-	fullScript := fmt.Sprintf("function filter() {\n %s \n}", script)
-
-	//compiling js code is needed
-	_, err := goja.Compile("filter", fullScript, false)
-	if err != nil {
-		return &resp, err
-	}
-
 	ns, err := flow.getNamespace(ctx, flow.db.Namespace, namespace)
 	if err != nil {
 		return &resp, err
 	}
 
-	k, err := ns.QueryCloudeventfilters().Where(enteventsfilter.NameEQ(filterName)).Count(ctx)
+	err = flow.createCloudEventFilter(ctx, flow.db.CloudEventFilters, ns, filterName, script)
 	if err != nil {
 		return &resp, err
 	}
-
-	if k != 0 {
-		err = fmt.Errorf("cloud event filter %s already exist", filterName)
-		return &resp, err
-	}
-
-	_, err = flow.db.CloudEventFilters.Create().SetName(filterName).SetNamespace(ns).SetJscode(script).Save(ctx)
-	if err != nil {
-		return &resp, err
-	}
-
-	var key keyPair
-	key.filtername = filterName
-	key.namespace = namespace
-	eventFilterCache.put(key, script)
 
 	return &resp, err
+
+}
+
+func (flow *flow) getCloudEventFilters(ctx context.Context, ns *ent.Namespace) ([]*ent.CloudEventFilters, error) {
+
+	dbs, err := ns.QueryCloudeventfilters().Where(enteventsfilter.HasNamespace()).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return dbs, err
 
 }
 
@@ -1202,7 +1234,7 @@ func (flow *flow) GetCloudEventFilters(ctx context.Context, in *grpc.GetCloudEve
 		return resp, err
 	}
 
-	dbs, err := ns.QueryCloudeventfilters().Where(enteventsfilter.HasNamespace()).All(ctx)
+	dbs, err := flow.getCloudEventFilters(ctx, ns)
 	if err != nil {
 		return resp, err
 	}
